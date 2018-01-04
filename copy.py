@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jan  4 23:04:50 2018
+Created on Fri Jan  5 03:08:03 2018
 
 @author: nixian
 """
+
+
+
 
 import numpy as np
 from matplotlib.path import Path
@@ -87,6 +90,12 @@ def fitFunc(x,y):
         t2 = ((ziel_x - x) ** 2 + (ziel_y - y) ** 2) ** 0.5 / v2
         return t1+t2
 
+
+
+
+
+
+
 class bird:
     """
     speed:速度
@@ -95,15 +104,12 @@ class bird:
     lbestposition:经历的最佳位置
     lbestfit:经历的最佳的适应度值
     """
-    def __init__(self, speed_x, speed_y, position_x, position_y, fit, lBestPosition_x, lBestPosition_y, lBestFit):
-        self.speed_x = speed_x
-        self.speed_y = speed_y
-        self.position_x = position_x
-        self.position_y = position_y
+    def __init__(self, speed, position, fit, lBestPosition, lBestFit):
+        self.speed = speed
+        self.position = position
         self.fit = fit
-        self.lBestPosition_x = lBestPosition_x
-        self.lBestPosition_y = lBestPosition_y
-        self.lBestFit = lBestFit
+        self.lBestFit = lBestPosition
+        self.lBestPosition = lBestFit
 
 
 
@@ -115,26 +121,20 @@ class PSO:
     c1,c2:个体学习因子，社会学习因子
     solutionSpace:解空间，列表类型：[最小值，最大值]
     """
-    def __init__(self, fitFunc, birdNum, w, c1, c2, maxIter):
+    def __init__(self, fitFunc, birdNum, w, c1, c2, solutionSpace):
         self.fitFunc = fitFunc
-        self.w = w
-        self.c1 = c1
-        self.c2 = c2
-        self.birdNum = birdNum
-        self.maxIter = maxIter
-        self.solutionSpace_x = [ori_x, ziel_x]
-        self.solutionSpace_y = [ori_y, ziel_y]
-        self.birds, self.best = self.initbirds()
+        self.w = 0.3
+        self.c1 = 3
+        self.c2 = 1
+        self.birds, self.best = self.initbirds(birdNum, solutionSpace)
 
-    def initbirds(self):
+    def initbirds(self, size, solutionSpace):
         birds = []
-        for i in range(self.birdNum):
-            position_x = random.uniform(self.solutionSpace_x[0], self.solutionSpace_x[1])
-            position_y = random.uniform(self.solutionSpace_y[0], self.solutionSpace_y[1])
-            speed_x = 0
-            speed_y = 0
-            fit = self.fitFunc(position_x,position_y)
-            birds.append(bird(speed_x, speed_y, position_x, position_y, fit, position_x, position_y, fit))
+        for i in range(size):
+            position = random.uniform(solutionSpace[0], solutionSpace[1])
+            speed = 0
+            fit = self.fitFunc(position)
+            birds.append(bird(speed, position, fit, position, fit))
         best = birds[0]
         for bird in birds:
             if bird.fit > best.fit:
@@ -143,52 +143,23 @@ class PSO:
 
     def updateBirds(self):
         for bird in self.birds:
-            #bird.speed = self.w * bird.speed + self.c1 * random.random() * (bird.lBestPosition - bird.position) + self.c2 * random.random() * (self.best.position - bird.position)
-            #bird.speed = self.w * bird.speed + \
-            #self.c1 * random.random() * (((bird.lBestPosition_x - bird.position_x) ** 2 + (bird.lBestPosition_y - bird.position_y) ** 2) ** 0.5) + \
-            #self.c2 * random.random() * (((self.best.position_x - bird.position_x) ** 2 + (self.best.position_y - bird.position_y) ** 2) ** 0.5)
-            # 更新速度                       
-            bird.speed_x = self.w * bird.speed_x + self.c1 * random.random() * (bird.lBestPosition_x - bird.position_x) + self.c2 * random.random() * (self.best.position_x - bird.position_x)
-            bird.speed_y = self.w * bird.speed_y + self.c1 * random.random() * (bird.lBestPosition_y - bird.position_y) + self.c2 * random.random() * (self.best.position_y - bird.position_y)
+            # 更新速度
+            bird.speed = self.w * bird.speed + self.c1 * random.random() * (bird.lBestPosition - bird.position) + self.c2 * random.random() * (self.best.position - bird.position)
             # 更新位置
-            bird.position_x = bird.position_x + bird.speed_x
-            if bird.position_x < ori_x:
-                bird.position_x = ori_x
-            elif bird.position_x > ziel_x:
-                bird.position_x = ziel_x
-
-            bird.position_y = bird.position_y + bird.speed_y
-            if bird.position_y < ori_y:
-                bird.position_y = ori_y
-            elif bird.position_y > ziel_y:
-                bird.position_y = ziel_y
+            bird.position = bird.position + bird.speed
             # 更新适应度
-            bird.fit = self.fitFunc(bird.position_x,bird.position_y)
+            bird.fit = self.fitFunc(bird.position)
             # 查看是否需要更新经验最优
-            if bird.fit < bird.lBestFit:
+            if bird.fit > bird.lBestFit:
                 bird.lBestFit = bird.fit
-                bird.lBestPosition_x = bird.position_x
-                bird.lBestPosition_y = bird.position_y
+                bird.lBestPosition = bird.position
 
-    def solve(self):
+    def solve(self, maxIter):
         # 只考虑了最大迭代次数，如需考虑阈值，添加判断语句就好
-        for i in range(self.maxIter):
+        for i in range(maxIter):
             # 更新粒子
             self.updateBirds()
             for bird in self.birds:
                 # 查看是否需要更新全局最优
-                if bird.fit < self.best.fit:
+                if bird.fit > self.best.fit:
                     self.best = bird
-
-
-
-
-
-
-
-
-
-
-
-
-
