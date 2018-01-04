@@ -179,6 +179,8 @@ class PSO:
                 # 查看是否需要更新全局最优
                 if bird.fit < self.best.fit:
                     self.best = bird
+            print("======="+i+"======="+"x:"+self.best.position_x+"y:"+self.best.position_y+"t:" + self.best.fit)
+            
 
 
 
