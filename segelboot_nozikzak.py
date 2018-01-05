@@ -105,8 +105,6 @@ class bird:
         self.lBestPosition_y = lBestPosition_y
         self.lBestFit = lBestFit
 
-
-
 class PSO:
     """
     fitFunc:适应度函数
@@ -114,7 +112,7 @@ class PSO:
     w:惯性权重
     c1,c2:个体学习因子，社会学习因子
     solutionSpace:解空间，列表类型：[最小值，最大值]
-    """
+    """   
     def __init__(self, fitFunc, birdNum, w, c1, c2, maxIter):
         self.fitFunc = fitFunc
         self.w = w
