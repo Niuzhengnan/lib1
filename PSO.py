@@ -71,10 +71,17 @@ ori_y = 0
 ziel_x = 100
 ziel_y = 100
 obstacles = []
-phi_w = 180
+phi_w = -135
 v_max = 5
 v_w = 3
 
+def add_obstacle(obs_x,obs_y, width, v_o, phi_o): # phi can be from 0 to 360
+    obstacles.append([obs_x,obs_y,width, v_o, phi_o/180*np.pi])
+    print('Obstacle ' + '[' + str(obs_x) + ',' + str(obs_y) + '] added. width = ' + str(width))
+
+def remove_obstacle():
+    popped_obstacle = obstacles.pop()
+    print('Obstacle ' + str(popped_obstacle) + 'removed.')
 
 def fitFunc(x, y):
     theta1 = mt.atan2((y - ori_y), (x - ori_x)) / np.pi * 180
@@ -82,11 +89,11 @@ def fitFunc(x, y):
     v1 = vel(theta1, phi_w, v_max, v_w)
     v2 = vel(theta2, phi_w, v_max, v_w)
     if v1 == 0 or v2 == 0:
-        return np.inf
+        return np.inf,np.inf
     else:
         t1 = ((x - ori_x) ** 2 + (y - ori_y) ** 2) ** 0.5 / v1
         t2 = ((ziel_x - x) ** 2 + (ziel_y - y) ** 2) ** 0.5 / v2
-        return t1 + t2
+        return t1, t2
 
 class PSO:
     """
@@ -106,18 +113,21 @@ class PSO:
         lbestfit:经历的最佳的适应度值
         """
 
-        def __init__(self, speed_x, speed_y, position_x, position_y, fit, lBestPosition_x, lBestPosition_y, lBestFit):
+        def __init__(self, speed_x, speed_y, position_x, position_y, fit1, fit2, lBestPosition_x, lBestPosition_y, lBestFit1, lBestFit2):
             self.speed_x = speed_x
             self.speed_y = speed_y
             self.position_x = position_x
             self.position_y = position_y
-            self.fit = fit
+            self.fit1 = fit1
+            self.fit2 = fit2
             self.lBestPosition_x = lBestPosition_x
             self.lBestPosition_y = lBestPosition_y
-            self.lBestFit = lBestFit
+            self.lBestFit1 = lBestFit1
+            self.lBestFit2 = lBestFit2
 
-    def __init__(self, fitFunc, birdNum, w, c1, c2, maxIter):
+    def __init__(self, fitFunc, check_obstacles, birdNum, w, c1, c2, maxIter):
         self.fitFunc = fitFunc
+        self.check_obstacles = check_obstacles
         self.w = w
         self.c1 = c1
         self.c2 = c2
@@ -136,13 +146,13 @@ class PSO:
             position_y = random.uniform(*self.solutionSpace_y)
             speed_x = 0
             speed_y = 0
-            fit = self.fitFunc(position_x, position_y)
-            birds.append(PSO.Bird(speed_x, speed_y, position_x, position_y, fit, position_x, position_y, fit))
+            fit1, fit2 = self.fitFunc(position_x, position_y)
+            birds.append(PSO.Bird(speed_x, speed_y, position_x, position_y, fit1, fit2, position_x, position_y, fit1,fit2))
         best = birds[0]
         # for bird in birds:
         #    if bird.fit > best.fit:
         #        best = bird
-        best = min(birds, key=lambda x: x.fit)
+        best = min(birds, key=lambda x: x.fit1 + x.fit2)
         return birds, best
 
     def updateBirds(self):
@@ -180,10 +190,10 @@ class PSO:
             elif bird.position_y > ziel_y:
                 bird.position_y = ziel_y
             # 更新适应度
-            bird.fit = self.fitFunc(bird.position_x, bird.position_y)
+            bird.fit1, bird.fit2 = self.fitFunc(bird.position_x, bird.position_y)
             # 查看是否需要更新经验最优
-            if bird.fit < bird.lBestFit:
-                bird.lBestFit = bird.fit
+            if bird.fit1 + bird.fit2 < bird.lBestFit1 + bird.lBestFit2 and self.check_obstacles(obstacles,bird.position_x, bird.position_y, bird.fit1, bird.fit2):
+                bird.lBestFit = bird.fit1 + bird.fit2
                 bird.lBestPosition_x = bird.position_x
                 bird.lBestPosition_y = bird.position_y
 
@@ -194,12 +204,18 @@ class PSO:
             self.updateBirds()
             for bird in self.birds:
                 # 查看是否需要更新全局最优
-                if bird.fit < self.best.fit:
+                if bird.fit1 + bird.fit2 < self.best.fit1 + self.best.fit2:
                     self.best = bird
-            print("=======" + str(i) + "=======" + "x:" + str(self.best.lBestPosition_x) + "y:" + str(self.best.lBestPosition_y) + "t:" + str(self.best.fit))
+            #print("=======" + str(i) + "=======" + "x:" + str(self.best.lBestPosition_x) + "y:" + str(self.best.lBestPosition_y) + "t:" + str(self.best.fit))
+
+
+def check_obstacles(obstacles,pos_x,pos_y, t1, t2):
+    return True # no obstacle detected
+
+
             
 if __name__ == "__main__":
-    a = PSO(fitFunc,100,0.3,3,1,100)
+    a = PSO(fitFunc,check_obstacles,100,0.3,3,1,100)
     a.initbirds()
     a.solve()
     print(a.best.lBestPosition_x,a.best.lBestPosition_y,a.best.lBestFit)
