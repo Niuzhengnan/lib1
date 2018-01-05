@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Jan  4 23:04:50 2018
-@author: nixian
+@author: niu
 """
 
 import numpy as np
@@ -14,7 +14,8 @@ import math as mt
 import matplotlib.animation as animation
 from scipy.interpolate import UnivariateSpline
 import random
-
+from pandas import Series
+import math as mt
 
 def vel(phi, phi_w, v_max, v_w):  # possible degree between -180 and 180
 
@@ -210,15 +211,66 @@ class PSO:
 
 
 def check_obstacles(obstacles,pos_x,pos_y, t1, t2):
-    return True # no obstacle detected
+    #first part of the route
+    r1_1 = Series([ori_x,ori_y],index=['x','y'])
+    r1_2 = Series([pos_x,pos_y],index=['x','y'])
+    #second part of the route
+    r2_1 = Series([pos_x,pos_y],index=['x','y']) # also r1_2
+    r2_2 = Series([ziel_x,ziel_y],index=['x','y'])
+    
+    for obstacle in obstacles:
+        #to detect whether the first part of route meets with an obstacle
+        l1_1 = Series([obstacle[0],obstacle[1]],index=['x','y'])
+        l1_2 = Series([(obstacle[0] + t1 * obstacle[3] * np.cos(obstacle[4])),(obstacle[1] + t1 * obstacle[3] * np.sin(obstacle[4]))],index=['x','y'])
+        #to detect whether the first part of route meets with an obstacle
+        l2_1 = Series([(obstacle[0] + t1 * obstacle[3] * np.cos(obstacle[4])),(obstacle[1] + t1 * obstacle[3] * np.sin(obstacle[4]))],index=['x','y'])
+        l2_2 = Series([(obstacle[0] + (t1+t2) * obstacle[3] * np.cos(obstacle[4])),(obstacle[1] + (t1+t2) * obstacle[3] * np.sin(obstacle[4]))],index=['x','y'])
+        
+        d1 = 10000000000
+        d2 = 10000000000
+        if (l1_1['x'] == l1_2['x'] and r1_1['x'] == r1_2['x']):
+            parallel_l1_r1 = True
+        elif ((l1_2['y'] - l1_1['y'])/(l1_2['x'] - l1_1['x'])) == ((r1_2['y'] - r1_1['y'])/(r1_2['x'] - r1_1['x'])):
+            parallel_l1_r1 = True
+        else:
+            parallel_l1_r1 = False
+        
+        #if min(x3,x4) > max(x1,x2) or max(x3,x4) < min(x1,x2):
+        #if min(x3,x4) - max(x1,x2) > sth or min(x1,x2) - max(x3,x4) >sth :
+        r1_length = ((r1_2['x'] - r1_1['x'])**2 + (r1_2['y'] - r1_1['y'])**2)**0.5
+        r1_theta = mt.atan2((r1_2['y'] - r1_1['y']),(r1_2['x'] - r1_1['x']))
+        r1sth = r1_length * np.sin(r1_theta) * np.tan(r1_theta)
+        l1_length = ((l1_2['x'] - l1_1['x'])**2 + (l1_2['y'] - l1_1['y'])**2)**0.5
+        l1_theta = mt.atan2((l1_2['y'] - l1_1['y']),(l1_2['x'] - l1_1['x']))
+        l1sth = l1_length * np.sin(l1_theta) * np.tan(l1_theta)
+        if min(l1_1['x'],l1_2['x']) - max(r1_1['x'],r1_2['x']) > r1sth or min(r1_1['x'],r1_2['x']) - max(l1_1['x'],l1_2['x']) > l1sth:
+            d11 = ((l1_1['x'] - r1_1['x']) ** 2 + (l1_1['y'] - r1_1['y']) ** 2) ** 0.5
+            d12 = ((l1_2['x'] - r1_1['x']) ** 2 + (l1_2['y'] - r1_1['y']) ** 2) ** 0.5
+            d13 = ((l1_1['x'] - r1_2['x']) ** 2 + (l1_1['y'] - r1_2['y']) ** 2) ** 0.5
+            d14 = ((l1_2['x'] - r1_2['x']) ** 2 + (l1_2['y'] - r1_2['y']) ** 2) ** 0.5
+            d1 = min(d11,d12,d13,d14)        
+        elif parallel_l1_r1:            
+            a = [(l1_1['x'] - r1_1['x']),(l1_1['y'] - r1_1['y'])]
+            b = [(l1_2['x'] - l1_1['x']),(l1_2['y'] - l1_1['y'])]
+            a_length = (a[0] ** 2 + a[1] ** 2) ** 0.5
+            b_length = (b[0] ** 2 + b[1] ** 2) ** 0.5
+            
+            d1 = a_length * (1 - ((a[0]*b[0] + a[1]*b[1])/(a_length*b_length))**2)**0.5
+        else:
+            
+            
+            
+    
+    
+    #return True # no obstacle detected
 
 
             
-if __name__ == "__main__":
-    a = PSO(fitFunc,check_obstacles,100,0.3,3,1,100)
-    a.initbirds()
-    a.solve()
-    print(a.best.lBestPosition_x,a.best.lBestPosition_y,a.best.lBestFit)
+#if __name__ == "__main__":
+#    a = PSO(fitFunc,check_obstacles,100,0.3,3,1,100)
+#    a.initbirds()
+#    a.solve()
+#    print(a.best.lBestPosition_x,a.best.lBestPosition_y,a.best.lBestFit)
  
     
     
