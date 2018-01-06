@@ -98,20 +98,20 @@ def fitFunc(x, y):
 
 class PSO:
     """
-    fitFunc:适应度函数
-    birdNum:种群规模
-    w:惯性权重
-    c1,c2:个体学习因子，社会学习因子
-    solutionSpace:解空间，列表类型：[最小值，最大值]
+    fitFunc:适应度函数 fitfunction
+    birdNum:种群规模 the total number of all the birds
+    w:惯性权重 weight of inertia
+    c1,c2:个体学习因子，社会学习因子 self-learning-coefficient social-learning-coeffizient
+    solutionSpace: solution space
     """
 
     class Bird:
         """
-        speed:速度
-        position:位置
-        fit:适应度
-        lbestposition:经历的最佳位置
-        lbestfit:经历的最佳的适应度值
+        speed
+        position
+        fit
+        lbestposition:the best position that the bird has ever been
+        lbestfit:the best fitvalue in lbestposition
         """
 
         def __init__(self, speed_x, speed_y, position_x, position_y, fit1, fit2, lBestPosition_x, lBestPosition_y, lBestFit1, lBestFit2):
@@ -162,7 +162,7 @@ class PSO:
             # bird.speed = self.w * bird.speed + \
             # self.c1 * random.random() * (((bird.lBestPosition_x - bird.position_x) ** 2 + (bird.lBestPosition_y - bird.position_y) ** 2) ** 0.5) + \
             # self.c2 * random.random() * (((self.best.position_x - bird.position_x) ** 2 + (self.best.position_y - bird.position_y) ** 2) ** 0.5)
-            # 更新速度
+            # 更新速度 update the velocity
             bird.speed_x = self.w * bird.speed_x + self.c1 * random.random() * (
                     bird.lBestPosition_x - bird.position_x) + self.c2 * random.random() * (
                                    self.best.position_x - bird.position_x)
@@ -178,7 +178,7 @@ class PSO:
             bird.speed_y = self.w * bird.speed_y + self.c1 * w_local * (
                     bird.lBestPosition_y - bird.position_y) + self.c2 * w_global * (
                             self.best.position_y - bird.position_y)
-            # 更新位置
+            # 更新位置 update the position
             bird.position_x = bird.position_x + bird.speed_x
             if bird.position_x < ori_x:
                 bird.position_x = ori_x
@@ -190,21 +190,19 @@ class PSO:
                 bird.position_y = ori_y
             elif bird.position_y > ziel_y:
                 bird.position_y = ziel_y
-            # 更新适应度
+            # 更新适应度 update the fitvalue
             bird.fit1, bird.fit2 = self.fitFunc(bird.position_x, bird.position_y)
-            # 查看是否需要更新经验最优
+            # 查看是否需要更新经验最优 check whether the best fit should be updated or not
             if bird.fit1 + bird.fit2 < bird.lBestFit1 + bird.lBestFit2 and self.check_obstacles(obstacles,bird.position_x, bird.position_y, bird.fit1, bird.fit2):
                 bird.lBestFit = bird.fit1 + bird.fit2
                 bird.lBestPosition_x = bird.position_x
                 bird.lBestPosition_y = bird.position_y
 
     def solve(self):
-        # 只考虑了最大迭代次数，如需考虑阈值，添加判断语句就好
         for i in range(self.maxIter):
-            # 更新粒子
             self.updateBirds()
             for bird in self.birds:
-                # 查看是否需要更新全局最优
+                # 查看是否需要更新全局最优 check whether the best fit should be updated or not
                 if bird.fit1 + bird.fit2 < self.best.fit1 + self.best.fit2:
                     self.best = bird
             #print("=======" + str(i) + "=======" + "x:" + str(self.best.lBestPosition_x) + "y:" + str(self.best.lBestPosition_y) + "t:" + str(self.best.fit))
@@ -333,6 +331,8 @@ def check_obstacles(obstacles,pos_x,pos_y, t1, t2):
             
 if __name__ == "__main__":
     add_obstacle(15.883180032856652,84.11681965613178,3,5,0)
+    add_obstacle(84.11682012293643,15.883180170330476,3,5,90)
+    add_obstacle(8.43977295583942,76.03535607619673,3,5,120)
     a = PSO(fitFunc,check_obstacles,100,0.3,3,1,100)
     a.initbirds()
     a.solve()
