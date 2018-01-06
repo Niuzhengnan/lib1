@@ -332,6 +332,7 @@ def check_obstacles(obstacles,pos_x,pos_y, t1, t2):
 
             
 if __name__ == "__main__":
+    add_obstacle(15.883180032856652,84.11681965613178,3,5,0)
     a = PSO(fitFunc,check_obstacles,100,0.3,3,1,100)
     a.initbirds()
     a.solve()
