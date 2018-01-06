@@ -228,6 +228,7 @@ def check_obstacles(obstacles,pos_x,pos_y, t1, t2):
         
         d1 = 10000000000
         d2 = 10000000000
+        
         if (l1_1['x'] == l1_2['x'] and r1_1['x'] == r1_2['x']):
             parallel_l1_r1 = True
         elif ((l1_2['y'] - l1_1['y'])/(l1_2['x'] - l1_1['x'])) == ((r1_2['y'] - r1_1['y'])/(r1_2['x'] - r1_1['x'])):
@@ -248,6 +249,7 @@ def check_obstacles(obstacles,pos_x,pos_y, t1, t2):
             d12 = ((l1_2['x'] - r1_1['x']) ** 2 + (l1_2['y'] - r1_1['y']) ** 2) ** 0.5
             d13 = ((l1_1['x'] - r1_2['x']) ** 2 + (l1_1['y'] - r1_2['y']) ** 2) ** 0.5
             d14 = ((l1_2['x'] - r1_2['x']) ** 2 + (l1_2['y'] - r1_2['y']) ** 2) ** 0.5
+            
             d1 = min(d11,d12,d13,d14)        
         elif parallel_l1_r1:            
             a = [(l1_1['x'] - r1_1['x']),(l1_1['y'] - r1_1['y'])]
@@ -257,20 +259,83 @@ def check_obstacles(obstacles,pos_x,pos_y, t1, t2):
             
             d1 = a_length * (1 - ((a[0]*b[0] + a[1]*b[1])/(a_length*b_length))**2)**0.5
         else:
+            l1 = [(l1_2['x'] - l1_1['x']),(l1_2['y'] - l1_1['y'])]
+            l1_length = (l1[0]**2+l1[1]**2)*0.5
+            r1 = [(r1_2['x'] - r1_1['x']),(r1_2['y'] - r1_1['y'])]
+            r1_length = (r1[0]**2+r1[1]**2)**0.5
+            lr11 = [(l1_1['x'] - r1_1['x']),(l1_1['y'] - r1_1['y'])]
+            lr11_length = (lr11[0]**2+lr11[1]**2)**0.5
+            lr21 = [(l1_2['x'] - r1_1['x']),(l1_2['y'] - r1_1['y'])]
+            lr21_length = (lr21[0]**2+lr21[1]**2)**0.5
+            lr22 = [(l1_2['x'] - r1_2['x']),(l1_2['y'] - r1_2['y'])]
+            lr22_length = (lr22[0]**2+lr22[1]**2)**0.5
             
+            d111 = lr11_length * (1-((l1[0]*lr11[0]+l1[1]*lr11[1])/(l1_length*lr11_length))**2)**0.5
+            d112 = lr21_length * (1-((l1[0]*lr22[0]+l1[1]*lr22[1])/(l1_length*lr22_length))**2)**0.5
+            d113 = lr11_length * (1-((r1[0]*lr11[0]+r1[1]*lr11[1])/(r1_length*lr11_length))**2)**0.5
+            d114 = lr22_length * (1-((r1[0]*lr22[0]+r1[1]*lr22[1])/(r1_length*lr22_length))**2)**0.5
             
+            d1 = min(d111,d112,d113,d114)
+
+        if (l2_1['x'] == l2_2['x'] and r2_1['x'] == r2_2['x']):
+            parallel_l2_r2 = True
+        elif ((l2_2['y'] - l2_1['y'])/(l2_2['x'] - l2_1['x'])) == ((r2_2['y'] - r2_1['y'])/(r2_2['x'] - r2_1['x'])):
+            parallel_l2_r2 = True
+        else:
+            parallel_l2_r2 = False
+        
+        #if min(x3,x4) > max(x1,x2) or max(x3,x4) < min(x1,x2):
+        #if min(x3,x4) - max(x1,x2) > sth or min(x1,x2) - max(x3,x4) >sth :
+        r2_length = ((r2_2['x'] - r2_1['x'])**2 + (r2_2['y'] - r2_1['y'])**2)**0.5
+        r2_theta = mt.atan2((r2_2['y'] - r2_1['y']),(r2_2['x'] - r2_1['x']))
+        r2sth = r2_length * np.sin(r2_theta) * np.tan(r2_theta)
+        l2_length = ((l2_2['x'] - l2_1['x'])**2 + (l2_2['y'] - l2_1['y'])**2)**0.5
+        l2_theta = mt.atan2((l2_2['y'] - l2_1['y']),(l2_2['x'] - l2_1['x']))
+        l2sth = l2_length * np.sin(l2_theta) * np.tan(l2_theta)
+        if min(l2_1['x'],l2_2['x']) - max(r2_1['x'],r2_2['x']) > r2sth or min(r2_1['x'],r2_2['x']) - max(l2_1['x'],l2_2['x']) > l2sth:
+            d21 = ((l2_1['x'] - r2_1['x']) ** 2 + (l2_1['y'] - r2_1['y']) ** 2) ** 0.5
+            d22 = ((l2_2['x'] - r2_1['x']) ** 2 + (l2_2['y'] - r2_1['y']) ** 2) ** 0.5
+            d23 = ((l2_1['x'] - r2_2['x']) ** 2 + (l2_1['y'] - r2_2['y']) ** 2) ** 0.5
+            d24 = ((l2_2['x'] - r2_2['x']) ** 2 + (l2_2['y'] - r2_2['y']) ** 2) ** 0.5
             
-    
-    
-    #return True # no obstacle detected
+            d2 = min(d21,d22,d23,d24)        
+        elif parallel_l2_r2:            
+            a = [(l2_1['x'] - r2_1['x']),(l2_1['y'] - r2_1['y'])]
+            b = [(l2_2['x'] - l2_1['x']),(l2_2['y'] - l2_1['y'])]
+            a_length = (a[0] ** 2 + a[1] ** 2) ** 0.5
+            b_length = (b[0] ** 2 + b[1] ** 2) ** 0.5
+            
+            d2 = a_length * (1 - ((a[0]*b[0] + a[1]*b[1])/(a_length*b_length))**2)**0.5
+        else:
+            l2 = [(l2_2['x'] - l2_1['x']),(l2_2['y'] - l2_1['y'])]
+            l2_length = (l2[0]**2+l2[1]**2)*0.5
+            r2 = [(r2_2['x'] - r2_1['x']),(r2_2['y'] - r2_1['y'])]
+            r2_length = (r2[0]**2+r2[1]**2)**0.5
+            lr211 = [(l2_1['x'] - r2_1['x']),(l2_1['y'] - r2_1['y'])]
+            lr211_length = (lr211[0]**2+lr211[1]**2)**0.5
+            lr221 = [(l2_2['x'] - r2_1['x']),(l2_2['y'] - r2_1['y'])]
+            lr221_length = (lr221[0]**2+lr221[1]**2)**0.5
+            lr222 = [(l2_2['x'] - r2_2['x']),(l2_2['y'] - r2_2['y'])]
+            lr222_length = (lr222[0]**2+lr222[1]**2)**0.5
+            
+            d211 = lr211_length * (1-((l2[0]*lr211[0]+l2[1]*lr211[1])/(l2_length*lr211_length))**2)**0.5
+            d212 = lr221_length * (1-((l2[0]*lr222[0]+l2[1]*lr222[1])/(l2_length*lr222_length))**2)**0.5
+            d213 = lr211_length * (1-((r2[0]*lr211[0]+r2[1]*lr211[1])/(r2_length*lr211_length))**2)**0.5
+            d214 = lr222_length * (1-((r2[0]*lr222[0]+r2[1]*lr222[1])/(r2_length*lr222_length))**2)**0.5
+            
+            d2 = min(d211,d212,d213,d214)    
+        
+        if d1 < obstacle[2] or d2 < obstacle[2]:
+            return False
+    return True # no obstacle detected
 
 
             
-#if __name__ == "__main__":
-#    a = PSO(fitFunc,check_obstacles,100,0.3,3,1,100)
-#    a.initbirds()
-#    a.solve()
-#    print(a.best.lBestPosition_x,a.best.lBestPosition_y,a.best.lBestFit)
+if __name__ == "__main__":
+    a = PSO(fitFunc,check_obstacles,100,0.3,3,1,100)
+    a.initbirds()
+    a.solve()
+    print(a.best.lBestPosition_x,a.best.lBestPosition_y,a.best.lBestFit)
  
     
     
