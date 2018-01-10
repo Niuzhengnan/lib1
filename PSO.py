@@ -67,15 +67,6 @@ def vel(phi, phi_w, v_max, v_w):  # possible degree between -180 and 180
     return vel * v_akt
 
 
-ori_x = 0
-ori_y = 0
-ziel_x = 100
-ziel_y = 100
-obstacles = []
-phi_w = -135
-v_max = 5
-v_w = 3
-
 def add_obstacle(obs_x,obs_y, width, v_o, phi_o): # phi can be from 0 to 360
     obstacles.append([obs_x,obs_y,width, v_o, phi_o/180*np.pi])
     print('Obstacle ' + '[' + str(obs_x) + ',' + str(obs_y) + '] added. width = ' + str(width))
@@ -147,7 +138,7 @@ class PSO:
             position_y = random.uniform(*self.solutionSpace_y)
             speed_x = 0
             speed_y = 0
-            fit1, fit2 = self.fitFunc(position_x, position_y)
+            fit1, fit2= self.fitFunc(position_x, position_y)
             birds.append(PSO.Bird(speed_x, speed_y, position_x, position_y, fit1, fit2, position_x, position_y, fit1,fit2))
         best = birds[0]
         # for bird in birds:
@@ -327,9 +318,32 @@ def check_obstacles(obstacles,pos_x,pos_y, t1, t2):
             return False
     return True # no obstacle detected
 
+def simData():
+    xt = 0
+    yt = 0
+    assert len(xx) == len(yy) and len(xx) > 0
+    for i in np.arange(0,len(xx)):
+        xt = xx[i]
+        yt = yy[i]
+        yield xt, yt
+def simPoints(simData):
+    xt,yt = simData[0], simData[1]
+    line.set_data(xt,yt)
+    return line
 
             
 if __name__ == "__main__":
+    
+    
+    ori_x = 0
+    ori_y = 0
+    ziel_x = 100
+    ziel_y = 100
+    obstacles = []
+    phi_w = -135
+    v_max = 5
+    v_w = 3
+
     add_obstacle(15.883180032856652,84.11681965613178,3,5,0)
     add_obstacle(84.11682012293643,15.883180170330476,3,5,90)
     add_obstacle(8.43977295583942,76.03535607619673,3,5,120)
@@ -337,14 +351,54 @@ if __name__ == "__main__":
     a.initbirds()
     a.solve()
     print(a.best.lBestPosition_x,a.best.lBestPosition_y,a.best.lBestFit)
- 
+    bestx = a.best.lBestPosition_x
+    besty = a.best.lBestPosition_y
+    best_t = a.best.lBestFit
+    theta1 =  mt.atan2((besty - ori_y), (bestx - ori_x)) / np.pi * 180
+    theta2 =  mt.atan2((ziel_y - besty), (ziel_x - bestx)) / np.pi * 180
+    v1 = vel(theta1, phi_w, v_max, v_w)
+    v2 = vel(theta2, phi_w, v_max, v_w)
+    
+    division1 = ((bestx - ori_x)**2 + (besty - ori_y)**2)**0.5/v1   * 10
+    division2 = ((ziel_x - bestx)**2 + (ziel_y - besty)**2)**0.5/v2 * 10
+    xx1 = np.linspace(ori_x, bestx, division1)
+    yy1 = np.linspace(ori_y, besty, division1)
+    xx2 = np.linspace(bestx, ziel_x, division2)
+    yy2 = np.linspace(besty, ziel_y, division2)
+    xx = np.append(xx1, xx2)
+    yy = np.append(yy1, yy2)
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    line, = ax.plot([], [], 'bo', ms=5)
+    ani = animation.FuncAnimation(fig, simPoints, simData, blit=False, interval=50)
     
     
+    plt.axis([ori_x-10, ziel_x+10, ori_y-10, ziel_y+10])
+    plt.grid()
+    plt.plot([ori_x,ziel_x], [ori_y, ziel_y], 'rx')
+    plt.legend(bbox_to_anchor=(1, 1),
+          bbox_transform=plt.gcf().transFigure)
     
+    plt.annotate(r'Start',
+             xy=(ori_x, ori_y), xycoords='data',
+             xytext=(-40, -30), textcoords='offset points', fontsize=10,
+             arrowprops=dict(arrowstyle="->", connectionstyle="arc3, rad=0"))
     
+    plt.annotate(r'Goal',
+             xy=(ziel_x, ziel_y), xycoords='data',
+             xytext=(+10, +20), textcoords='offset points', fontsize=10,
+             arrowprops=dict(arrowstyle="->", connectionstyle="arc3, rad=0")) 
     
+    plt.arrow(x=0 , y=ziel_y, dx= 5 * np.cos(phi_w*np.pi/180) ,dy= 5 * np.sin(phi_w*np.pi/180), width=0.5)
+    font = {'family': 'serif',
+        'color':  'darkred',
+        'weight': 'normal',
+        'size': 8,
+        }
+    plt.text(10, 95, r'Windrichtung: ' + str(phi_w) + ' Grad', fontdict=font)
     
-    
+
     
     
     
