@@ -14,12 +14,12 @@ public abstract class RpgCharacter implements ICharacter {
 	private Skill Faehigkeit;
 	
 	public RpgCharacter(String Rpgclass, int healthpoint, int magicpoint, 
-			int attackvalue, int defensevalue) {
+			int attackbasicvalue, int defensebasicvalue) {
 		RpgKlasse = Rpgclass;
 		Lebenspunkte = healthpoint;
 		Magiepunkte = magicpoint;
-		Attacke_Grundwert = attackvalue;
-		Verteidigungs_Grundwert = defensevalue;
+		Attacke_Grundwert = attackbasicvalue;
+		Verteidigungs_Grundwert = defensebasicvalue;
 		alive = true;
 	}
 	
@@ -68,42 +68,96 @@ public abstract class RpgCharacter implements ICharacter {
 	}
 	
 	public void setSkill(Skill skill) {
-		Faehigkeit = skill;
+		if (getRpgClass() == "Mage" && getItem().getName() == "Wand" && skill.getName() == "Fire")
+		{Faehigkeit = skill;}
+		else if (getRpgClass() == "Warrior" && getItem().getName() == "Sword" && skill.getName() == "PowerStrike")
+		{Faehigkeit = skill;}
+		else {Faehigkeit = null;}
 	}
 	@Override
 	public int getDefense() {
-		// TODO Auto-generated method stub
-		return 0;
+		int defensevalue = getDefenseValue();
+		if (getItem() == null) {
+			return defensevalue;
+		}
+		else {
+			int itemdefensevalue = getItem().getDefenseValue();
+			return defensevalue + itemdefensevalue;
+		}
 	}
 
 	@Override
 	public int getAttack() {
-		// TODO Auto-generated method stub
-		return 0;
+		int attackvalue = getAttackValue();
+		if (getItem() == null) {
+			return attackvalue;
+		}
+		else {
+			int itemattackvalue = getItem().getAttackValue();
+			return attackvalue + itemattackvalue;
+		}		
 	}
 
 	@Override
 	public void receiveNormalDamage(int normalDamage) {
-		// TODO Auto-generated method stub
-
+		int realdamage = normalDamage - getDefense();
+		if (realdamage<0) { realdamage = 0;}
+		int life_now = getCurrentHp() - realdamage; 
+		if (life_now <= 0) {
+			Lebenspunkte = life_now;
+			alive = false;
+		}
+		else {
+			Lebenspunkte = life_now;
+		}
 	}
 
 	@Override
 	public void receiveMagicDamage(int magicDamage) {
-		// TODO Auto-generated method stub
-
+		int life_now = getCurrentHp() - magicDamage;
+		if (life_now <= 0) {
+			Lebenspunkte = life_now;
+			alive = false;
+		}
+		else {
+			Lebenspunkte = life_now;
+		}
 	}
 
 	@Override
 	public void normalAttack(RpgCharacter enemy) {
-		// TODO Auto-generated method stub
-
+		if (enemy.getAlive()) { enemy.receiveNormalDamage(getAttack());}
 	}
 
 	@Override
 	public void useSkill(RpgCharacter enemy) {
-		// TODO Auto-generated method stub
-
+		if (enemy.getAlive() && getSkill() != null 
+				&& getCurrentMp() >= getSkill().getMpCosts()) 
+		{
+			Magiepunkte -= getSkill().getMpCosts();
+			if (getSkill().getName() == "Fire") {
+				Fire fire = (Fire)getSkill();
+				fire.use(enemy);
+			}
+			else if (getSkill().getName() == "PowerStrike") {
+				PowerStrike powerstrike = (PowerStrike)getSkill();
+				powerstrike.use(enemy);
+			}
+		}
 	}
-
+	
+	public String getCharacterStats() {
+		String itemname;
+		String skillname;
+		if (getItem() == null) {itemname = "_";}
+		else {itemname = getItem().getName();}
+		if (getSkill() == null) {skillname = "_";}
+		else {skillname = getSkill().getName();}
+		//System.out.println("Class: " + getRpgClass() + " Hp: " + getMaxHp() + " Mp: " + getMaxMp() + 
+		//		" At: " + getAttack() + " Def: " + getDefense() + " Item: " + itemname + 
+		//		" Skill: " + skillname);
+		return "Class: " + getRpgClass() + " Hp: " + getMaxHp() + " Mp: " + getMaxMp() + 
+				" At: " + getAttack() + " Def: " + getDefense() + " Item: " + itemname + 
+				" Skill: " + skillname;
+	}
 }
