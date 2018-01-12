@@ -69,7 +69,16 @@ def vel(phi, phi_w, v_max, v_w):  # possible degree between -180 and 180
 
 def add_obstacle(obs_x,obs_y, width, v_o, phi_o): # phi can be from 0 to 360
     obstacles.append([obs_x,obs_y,width, v_o, phi_o/180*np.pi])
+    radiusobs = width
+    xobs = [obs_x]
+    #xobs_end = obs_x+v_o*np.cos(phi_o/180*np.pi)*100
+    for i in range(1000):
+        xobs.append(obs_x+v_o*np.cos(phi_o/180*np.pi)*0.1*i)
+    yobs = [obs_y]
+    for i in range(1000):
+        yobs.append(obs_y+v_o*np.sin(phi_o/180*np.pi)*0.1*i)
     print('Obstacle ' + '[' + str(obs_x) + ',' + str(obs_y) + '] added. width = ' + str(width))
+    return xobs,yobs,radiusobs
 
 def remove_obstacle():
     popped_obstacle = obstacles.pop()
@@ -331,6 +340,50 @@ def simPoints(simData):
     line.set_data(xt,yt)
     return line
 
+def simDataobs1():
+    xobst = 0
+    yobst = 0
+    assert len(xx) == len(yy) and len(xx) > 0
+    for i in np.arange(0,len(xx)):
+        xobst = xobs1[i]
+        yobst = yobs1[i]
+        yield xobst, yobst
+        
+def simPointsobs1(simDataobs):
+    xobst,yobst = simDataobs[0], simDataobs[1]
+    patch1.set_radius(radiusobs1)
+    patch1.center=(xobst,yobst)    
+    return patch1
+
+def simDataobs2():
+    xobst = 0
+    yobst = 0
+    assert len(xx) == len(yy) and len(xx) > 0
+    for i in np.arange(0,len(xx)):
+        xobst = xobs2[i]
+        yobst = yobs2[i]
+        yield xobst, yobst
+        
+def simPointsobs2(simDataobs):
+    xobst,yobst = simDataobs[0], simDataobs[1]
+    patch2.set_radius(radiusobs2)
+    patch2.center=(xobst,yobst)    
+    return patch2
+
+def simDataobs3():
+    xobst = 0
+    yobst = 0
+    assert len(xx) == len(yy) and len(xx) > 0
+    for i in np.arange(0,len(xx)):
+        xobst = xobs3[i]
+        yobst = yobs3[i]
+        yield xobst, yobst
+        
+def simPointsobs3(simDataobs):
+    xobst,yobst = simDataobs[0], simDataobs[1]
+    patch3.set_radius(radiusobs3)
+    patch3.center=(xobst,yobst)    
+    return patch3
             
 if __name__ == "__main__":
     
@@ -343,10 +396,13 @@ if __name__ == "__main__":
     phi_w = -135
     v_max = 5
     v_w = 3
-
-    add_obstacle(15.883180032856652,84.11681965613178,3,5,0)
-    add_obstacle(84.11682012293643,15.883180170330476,3,5,90)
-    add_obstacle(8.43977295583942,76.03535607619673,3,5,120)
+    patch1 = patches.Circle((0, 0),radius=10,fc='y')
+    patch2 = patches.Circle((0, 0),radius=10,fc='y')
+    patch3 = patches.Circle((0, 0),radius=10,fc='y')
+    
+    xobs1, yobs1, radiusobs1 = add_obstacle(15.883180032856652,84.11681965613178,3,0.5,0)
+    xobs2, yobs2, radiusobs2 = add_obstacle(84.11682012293643,15.883180170330476,3,0.5,90)
+    xobs3, yobs3, radiusobs3 = add_obstacle(8.43977295583942,76.03535607619673,3,0.5,120)
     a = PSO(fitFunc,check_obstacles,100,0.3,3,1,100)
     a.initbirds()
     a.solve()
@@ -370,9 +426,14 @@ if __name__ == "__main__":
     
     fig = plt.figure()
     ax = fig.add_subplot(111)
+    ax.add_patch(patch1)
+    ax.add_patch(patch2)
+    ax.add_patch(patch3)
     line, = ax.plot([], [], 'bo', ms=5)
     ani = animation.FuncAnimation(fig, simPoints, simData, blit=False, interval=50)
-    
+    anim1= animation.FuncAnimation(fig, simPointsobs1,simDataobs1,blit=False,interval=50)
+    anim2= animation.FuncAnimation(fig, simPointsobs2,simDataobs2,blit=False,interval=50)
+    anim3= animation.FuncAnimation(fig, simPointsobs3,simDataobs3,blit=False,interval=50)
     
     plt.axis([ori_x-10, ziel_x+10, ori_y-10, ziel_y+10])
     plt.grid()
