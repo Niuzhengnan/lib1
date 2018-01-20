@@ -16,6 +16,7 @@ from scipy.interpolate import UnivariateSpline
 import random
 from pandas import Series
 import math as mt
+from matplotlib.lines import Line2D
 
 def vel(phi, phi_w, v_max, v_w):  # possible degree between -180 and 180
 
@@ -403,7 +404,7 @@ if __name__ == "__main__":
     xobs1, yobs1, radiusobs1 = add_obstacle(15.883180032856652,84.11681965613178,3,0.5,0)
     xobs2, yobs2, radiusobs2 = add_obstacle(84.11682012293643,15.883180170330476,3,0.5,90)
     xobs3, yobs3, radiusobs3 = add_obstacle(8.43977295583942,76.03535607619673,3,0.5,120)
-    a = PSO(fitFunc,check_obstacles,100,0.3,3,1,100)
+    a = PSO(fitFunc,check_obstacles,100,0.3,3,1,1000)
     a.initbirds()
     a.solve()
     print(a.best.lBestPosition_x,a.best.lBestPosition_y,a.best.lBestFit)
@@ -430,6 +431,12 @@ if __name__ == "__main__":
     ax.add_patch(patch2)
     ax.add_patch(patch3)
     line, = ax.plot([], [], 'bo', ms=5)
+    line1 = [(ori_x, ori_y), (bestx, besty)]
+    line2 = [(bestx, besty), (ziel_x, ziel_y)]
+    (line1_xs, line1_ys) = zip(*line1)
+    (line2_xs, line2_ys) = zip(*line2)
+    ax.add_line(Line2D(line1_xs, line1_ys, linewidth=1, color='blue'))
+    ax.add_line(Line2D(line2_xs, line2_ys, linewidth=1, color='red'))
     ani = animation.FuncAnimation(fig, simPoints, simData, blit=False, interval=50)
     anim1= animation.FuncAnimation(fig, simPointsobs1,simDataobs1,blit=False,interval=50)
     anim2= animation.FuncAnimation(fig, simPointsobs2,simDataobs2,blit=False,interval=50)
